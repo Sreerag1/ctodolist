@@ -2,6 +2,7 @@
 
 #include "cdk_test.h"
 CDKSCREEN *cdkscreen = 0;
+FILE *fp;
 
 #ifdef HAVE_XCURSES
 char *XCursesProgramName = "scroll_ex";
@@ -29,6 +30,7 @@ static int addItemCB (EObjectType cdktype GCC_UNUSED,
                       "");
 
    // addCDKScrollItem (s, newLabel ("add"));
+   fprintf(fp, "%s\n",itemName );
    addCDKScrollItem (s, itemName);
 
    refreshCDKScreen (ScreenOf (s));
@@ -76,19 +78,33 @@ int main (int argc, char **argv)
 {
    /* Declare variables. */
    CDKSCROLL *scrollList = 0;
-   const char *title = "<C></5>Pick a filee";
-   // char **item =0;
-   char *item[] = {
-      "item1",
-      "item2",
-      "item3" 
-   };
+   const char *title = "Here's your todo list:";
+
    const char *mesg[5];
    char temp[256];
    int selection, count;
 
    CDK_PARAMS params;
 
+   // char **item =0;
+   // file reading operation
+   char listItem[20];
+   int no_of_items;
+   int counter=0;
+   char **item = NULL;
+   fp = fopen("list.txt", "r");
+   if(fp != NULL){
+      no_of_items = fscanf(fp,"%s\n",&listItem);
+      while(EOF != no_of_items && 0 != no_of_items ){
+         item[counter] =(char *)malloc(sizeof(char) * strlen(listItem));
+         item[counter] = listItem;
+         no_of_items = fscanf(fp,"%s\n",&listItem);
+      }
+   } else {
+      fp = fopen("list.txt", "a");
+   }
+
+   
    CDKparseParams (argc, argv, &params, "cs:t:" CDK_CLI_PARAMS);
 
    cdkscreen = initCDKScreen (NULL);
