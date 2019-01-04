@@ -1,13 +1,12 @@
 /* $Id: scroll_ex.c,v 1.25 2016/12/04 15:22:16 tom Exp $ */
 
-#include "cdk_test.h"
-CDKSCREEN *cdkscreen = 0;
-FILE *fp;
+#include <cdk_test.h>
 
 #ifdef HAVE_XCURSES
 char *XCursesProgramName = "scroll_ex";
 #endif
 
+CDKSCREEN *cdkscreen = 0;
 static char *newLabel (const char *prefix)
 {
    static int count;
@@ -26,12 +25,12 @@ static int addItemCB (EObjectType cdktype GCC_UNUSED,
 
    itemName = getString (cdkscreen,
                       "Enter your list item",
-                      "Labele",
+                      ":",
                       "");
 
    // addCDKScrollItem (s, newLabel ("add"));
-   fprintf(fp, "%s\n",itemName );
    addCDKScrollItem (s, itemName);
+
 
    refreshCDKScreen (ScreenOf (s));
 
@@ -44,8 +43,15 @@ static int insItemCB (EObjectType cdktype GCC_UNUSED,
             chtype input GCC_UNUSED)
 {
    CDKSCROLL *s = (CDKSCROLL *)object;
+   char *itemName;
 
-   insertCDKScrollItem (s, newLabel ("insert"));
+
+   itemName = getString (cdkscreen,
+                      "Enter your list item",
+                      ":",
+                      "");
+   // insertCDKScrollItem (s,newLabel("insert"));
+      insertCDKScrollItem (s,itemName);
 
    refreshCDKScreen (ScreenOf (s));
 
@@ -65,6 +71,27 @@ static int delItemCB (EObjectType cdktype GCC_UNUSED,
 
    return (TRUE);
 }
+static int saveItemCB(EObjectType cdktype GCC_UNUSED,
+            void *object,
+            void *clientData GCC_UNUSED,
+            chtype input GCC_UNUSED){
+   CDKSCROLL *s = (CDKSCROLL *)object;
+   char **list = (char **)clientData;
+   int no_of_items=0;
+   int countiya=0;
+   no_of_items =getCDKScrollItems (
+                      s,
+                      list);
+   FILE *new;
+   new = fopen("get_scroll_items.txt", "w");
+   while(no_of_items--){
+      fprintf(new, "%s\n", list[countiya]);
+      countiya++;
+   }
+   fclose(new);   
+   return (TRUE);
+}
+
 
 /*
  * This program demonstrates the Cdk scrolling list widget.
@@ -78,33 +105,14 @@ int main (int argc, char **argv)
 {
    /* Declare variables. */
    CDKSCROLL *scrollList = 0;
-   const char *title = "Here's your todo list:";
-
+   const char *title = "<C></5>Pick a filee";
+   char **item = 0;
    const char *mesg[5];
    char temp[256];
    int selection, count;
 
    CDK_PARAMS params;
 
-   // char **item =0;
-   // file reading operation
-   char listItem[20];
-   int no_of_items;
-   int counter=0;
-   char **item = NULL;
-   fp = fopen("list.txt", "r");
-   if(fp != NULL){
-      no_of_items = fscanf(fp,"%s\n",&listItem);
-      while(EOF != no_of_items && 0 != no_of_items ){
-         item[counter] =(char *)malloc(sizeof(char) * strlen(listItem));
-         item[counter] = listItem;
-         no_of_items = fscanf(fp,"%s\n",&listItem);
-      }
-   } else {
-      fp = fopen("list.txt", "a");
-   }
-
-   
    CDKparseParams (argc, argv, &params, "cs:t:" CDK_CLI_PARAMS);
 
    cdkscreen = initCDKScreen (NULL);
@@ -114,7 +122,7 @@ int main (int argc, char **argv)
 
    /* Use the current diretory list to fill the radio list. */
    // count = CDKgetDirectoryContents (".", &item);
-   count = 3;
+   count = CDKreadFile ("get_scroll_items.txt",&item);
 
    /* Create the scrolling list. */
    scrollList = newCDKScroll (cdkscreen,
@@ -132,7 +140,7 @@ int main (int argc, char **argv)
 			      (CDKparamNumber (&params, 'c')
 			       ? 0
 			       : count),
-			      TRUE,
+			      FALSE,
 			      A_REVERSE,
 			      CDKparamValue (&params, 'N', TRUE),
 			      CDKparamValue (&params, 'S', FALSE));
@@ -174,6 +182,8 @@ int main (int argc, char **argv)
    bindCDKObject (vSCROLL, scrollList, 'a', addItemCB, NULL);
    bindCDKObject (vSCROLL, scrollList, 'i', insItemCB, NULL);
    bindCDKObject (vSCROLL, scrollList, 'd', delItemCB, NULL);
+   bindCDKObject (vSCROLL, scrollList, 's', saveItemCB, item);
+
 
    /* Activate the scrolling list. */
 
