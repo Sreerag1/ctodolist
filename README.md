@@ -1,4 +1,4 @@
-This is an attempt to create a simple todolist in c using CDKSroll widget.
+This is an attempt to create a simple todolist in c using CDKSroll widget :smiley:
 
 You may compile the program using the following command:
 $ gcc todolist.c -o todolist -lncurses -lcdk
